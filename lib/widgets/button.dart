@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class MyButton extends StatelessWidget {
+class Button extends StatelessWidget {
   final Function? onTap;
   final String? label;
 
-  MyButton({
+  Button({
     this.onTap,
     this.label,
   });

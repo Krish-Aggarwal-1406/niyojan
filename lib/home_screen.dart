@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
 
 import '../widgets/button.dart';
@@ -22,23 +21,58 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
+    final scrheight = MediaQuery.of(context).size.height;
+    final scrwidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      appBar: appBar(),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: context.theme.scaffoldBackgroundColor,
+        actions: [
+          CircleAvatar(
+            radius: 16,
+            backgroundImage: AssetImage("assets/download-removebg-preview (21).png"),
+          ),
+          SizedBox(width: 10),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: isSyncing
+                ? SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                color: Color(0xFF4169E1),
+                strokeWidth: 3,
+              ),
+            )
+                : IconButton(
+              icon: Icon(Icons.sync),
+              onPressed: () async {
+                setState(() {
+                  isSyncing = true;
+                });
+                await Future.delayed(Duration(seconds: 3));
+                setState(() {
+                  isSyncing = false;
+                });
+              },
+            ),
+          ),
+          SizedBox(width: 10),
+        ],
+      ),
       backgroundColor: context.theme.scaffoldBackgroundColor,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           addTaskBar(),
-          dateBar(),
-          noTaskMsg(),
+          timeline(),
+          emptylist(),
         ],
       ),
     );
   }
 
-  Widget dateBar() {
+  Widget timeline() {
     return Container(
       padding: EdgeInsets.only(bottom: 4),
       child: DatePicker(
@@ -78,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               Text("Today", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
             ],
           ),
-          MyButton(
+          Button(
             label: "+ Add Task",
             onTap: () {},
           ),
@@ -87,61 +121,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  PreferredSizeWidget appBar() {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: context.theme.scaffoldBackgroundColor,
-      leading: Icon(
-        Get.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-        color: Get.isDarkMode ? Colors.white : Color(0xFF2E2E2E),
-      ),
-      actions: [
-        CircleAvatar(
-          radius: 16,
-          backgroundImage: AssetImage("images/girl.jpg"),
-        ),
-        SizedBox(width: 10),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: isSyncing
-              ? SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              color: Color(0xFF4169E1),
-              strokeWidth: 3,
-            ),
-          )
-              : IconButton(
-            icon: Icon(Icons.sync),
-            onPressed: () async {
-              setState(() {
-                isSyncing = true;
-              });
-              await Future.delayed(Duration(seconds: 3));
-              setState(() {
-                isSyncing = false;
-              });
-            },
-          ),
-        ),
-        SizedBox(width: 10),
-        Icon(Icons.view_compact),
-      ],
-    );
-  }
 
-  Widget noTaskMsg() {
+
+  Widget emptylist() {
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Placeholder(),
+          Image.asset("assets/4118823-removebg-preview.png",height: 100,),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal:100 , vertical: 10),
             child: Text(
-              "You do not have any tasks yet!\nAdd new tasks to make your days productive.",
+              "You do not have any tasks yet!",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
