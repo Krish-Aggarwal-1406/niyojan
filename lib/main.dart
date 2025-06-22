@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:niyojan/home_screen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:niyojan/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   runApp(const MyApp());
 }
 
@@ -15,12 +17,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Niyojan',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF4169E1)),
+        scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
+        fontFamily: 'Lato',
       ),
-      home: HomePage(userName: "Guest"),
+      home: SplashScreen(),
     );
   }
 }

@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class InputField extends StatelessWidget {
   final String title;
   final TextEditingController? controller;
-  final String hint;
+  final String? hint;
   final bool? obsecureText;
   final Widget? widget;
 
   const InputField({
     required this.title,
     this.controller,
-    required this.hint,
+    this.hint,
     this.widget,
     this.obsecureText,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     TextStyle titleStyle = TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.bold,
-      color: Get.isDarkMode ? Colors.white : Colors.black87,
+      color: Colors.black87,
     );
 
     TextStyle subTitleStyle = TextStyle(
       fontSize: 14,
-      color: Get.isDarkMode ? Colors.grey[300] : Colors.grey[600],
+      color: Colors.grey[600],
     );
 
     return Container(
@@ -53,12 +53,12 @@ class InputField extends StatelessWidget {
                   child: TextFormField(
                     autofocus: false,
                     obscureText: obsecureText ?? false,
-                    cursorColor: Get.isDarkMode ? Colors.grey[100] : Colors.grey[600],
+                    cursorColor: Colors.grey[600],
                     readOnly: widget != null,
                     controller: controller,
                     style: subTitleStyle,
                     decoration: InputDecoration(
-                      hintText: hint,
+                      hintText: hint ?? '',
                       hintStyle: subTitleStyle,
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(width: 0),

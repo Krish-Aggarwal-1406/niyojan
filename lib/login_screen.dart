@@ -80,8 +80,8 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             Container(
               width: double.infinity,
-              height: height * 0.45,
-              child: Image.asset("assets/img_1.png", fit: BoxFit.fill),
+              height: height * 0.4,
+              child: Image.asset("assets/logo-removebg-preview.png", fit: BoxFit.fill),
             ),
             SizedBox(height: height * 0.02),
             Text(
@@ -121,10 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderSide: BorderSide(color: Colors.black87, width: 1.2),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        suffixIcon: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset("assets/img_3.png", fit: BoxFit.contain),
-                        ),
+
                         label: Hero(
                           tag: "emailTag",
                           child: Material(
@@ -160,10 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderSide: BorderSide(color: Colors.black87, width: 1.2),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        suffixIcon: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset("assets/img_3.png", fit: BoxFit.contain),
-                        ),
+
                         prefixIcon: Icon(Icons.lock_outline, color: Colors.black54),
                         label: Hero(
                           tag: "passwordTag",
@@ -218,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                           border: Border.all(width: 0.8, color: Colors.grey.shade400),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: Image.asset("assets/img_2.png"),
+                        child: Image.asset("assets/img.png"),
                       ),
                     ),
                     SizedBox(height: height * 0.015),
