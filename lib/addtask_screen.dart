@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:niyojan/widgets/text_field.dart';
-import '../widgets/button.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'controller/task_controller.dart';
 import 'models/task_model.dart';
+import 'widgets/button.dart';
+import 'widgets/text_field.dart';
 
 class AddTaskPage extends StatefulWidget {
   @override
@@ -12,6 +12,8 @@ class AddTaskPage extends StatefulWidget {
 }
 
 class AddTaskPageState extends State<AddTaskPage> {
+  final TaskController controller = Get.find<TaskController>();
+
   final TextEditingController titleController = TextEditingController();
   final TextEditingController noteController = TextEditingController();
 
@@ -21,13 +23,9 @@ class AddTaskPageState extends State<AddTaskPage> {
 
   String selectedPriority = "Medium";
   int selectedRemind = 5;
-  String selectedRepeat = 'None';
 
   final List<String> priorities = ["High", "Medium", "Low"];
   final List<int> remindList = [5, 10, 15, 20];
-  final List<String> repeatList = ['None', 'Daily', 'Weekly', 'Monthly'];
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -49,13 +47,6 @@ class AddTaskPageState extends State<AddTaskPage> {
             fontSize: 22,
           ),
         ),
-        actions: [
-          CircleAvatar(
-            radius: 16,
-            backgroundImage: AssetImage("assets/girl.jpg"),
-          ),
-          SizedBox(width: 20),
-        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: scrHeight * 0.01),
@@ -67,13 +58,13 @@ class AddTaskPageState extends State<AddTaskPage> {
               hint: "Enter title here.",
               controller: titleController,
             ),
-            SizedBox(height: 2),
+            SizedBox(height: 10),
             InputField(
               title: "Note",
               hint: "Enter note here.",
               controller: noteController,
             ),
-            SizedBox(height: 2),
+            SizedBox(height: 10),
             InputField(
               title: "Date",
               hint: DateFormat.yMd().format(selectedDate),
@@ -94,7 +85,7 @@ class AddTaskPageState extends State<AddTaskPage> {
                 },
               ),
             ),
-            SizedBox(height: 2),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -140,8 +131,8 @@ class AddTaskPageState extends State<AddTaskPage> {
                 ),
               ],
             ),
-            SizedBox(height: 2),
-            Dropdownwidget<int>(
+            SizedBox(height: 10),
+            DropdownWidget<int>(
               title: "Remind",
               value: selectedRemind,
               items: remindList,
@@ -156,8 +147,8 @@ class AddTaskPageState extends State<AddTaskPage> {
                 }
               },
             ),
-            SizedBox(height: 2),
-            Dropdownwidget<String>(
+            SizedBox(height: 10),
+            DropdownWidget<String>(
               title: "Priority",
               value: selectedPriority,
               items: priorities,
@@ -175,7 +166,7 @@ class AddTaskPageState extends State<AddTaskPage> {
             SizedBox(height: scrHeight * 0.03),
             Button(
               label: "Create Task",
-              onTap: () async {
+              onTap: () {
                 if (titleController.text.isNotEmpty && noteController.text.isNotEmpty) {
                   final newTask = Task(
                     title: titleController.text,
@@ -184,11 +175,10 @@ class AddTaskPageState extends State<AddTaskPage> {
                     startTime: startTime.format(context),
                     endTime: endTime.format(context),
                     remind: selectedRemind,
-                    repeat: selectedRepeat,
                     priority: selectedPriority,
                     status: "ToDo",
                   );
-                  await _firestore.collection('tasks').add(newTask.toMap());
+                  controller.addTask(newTask);
                   Get.back();
                 } else {
                   Get.snackbar("Error", "Title and Note are required.");
@@ -200,36 +190,40 @@ class AddTaskPageState extends State<AddTaskPage> {
       ),
     );
   }
+}
 
-  Widget Dropdownwidget<T>({
-    required String title,
-    required T value,
-    required List<T> items,
-    required ValueChanged<T?> onChanged,
-    required Color textColor,
-    required Color borderColor,
-    required Color iconColor,
-  }) {
+class DropdownWidget<T> extends StatelessWidget {
+  final String title;
+  final T value;
+  final List<T> items;
+  final ValueChanged<T?> onChanged;
+  final Color textColor;
+  final Color borderColor;
+  final Color iconColor;
+
+  const DropdownWidget({
+    Key? key,
+    required this.title,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    required this.textColor,
+    required this.borderColor,
+    required this.iconColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
+        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
         SizedBox(height: 6),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14),
           height: 52,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: borderColor,
-              width: 1,
-            ),
+            border: Border.all(color: borderColor, width: 1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButton<T>(
@@ -238,13 +232,10 @@ class AddTaskPageState extends State<AddTaskPage> {
             underline: SizedBox.shrink(),
             icon: Icon(Icons.keyboard_arrow_down, color: iconColor),
             onChanged: onChanged,
-            items: items.map((T item) {
+            items: items.map((item) {
               return DropdownMenuItem<T>(
                 value: item,
-                child: Text(
-                  item.toString(),
-                  style: TextStyle(color: textColor),
-                ),
+                child: Text(item.toString(), style: TextStyle(color: textColor)),
               );
             }).toList(),
           ),

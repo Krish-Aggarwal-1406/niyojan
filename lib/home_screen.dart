@@ -4,27 +4,31 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:niyojan/addtask_screen.dart';
-
-import '../widgets/button.dart';
+import 'package:niyojan/widgets/button.dart';
+import 'addtask_screen.dart';
 import 'login_screen.dart';
+import 'controller/task_controller.dart';
 import 'models/task_model.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
-
   const HomePage({Key? key, required this.userName}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now();
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final TaskController controller = Get.put(TaskController());
 
-  void bottomsheet(Task task) {
+  @override
+  void initState() {
+    super.initState();
+    controller.fetchTasks();
+  }
+
+  void bottomSheet(Task task) {
     Get.bottomSheet(
       Container(
         padding: EdgeInsets.all(16),
@@ -38,7 +42,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.check_circle),
               title: Text('Mark as Completed'),
               onTap: () async {
-                await firestore.collection('tasks').doc(task.id).update({'status': 'Completed'});
+                await controller.updateTaskStatus(task.id, 'Completed');
                 Get.back();
               },
             ),
@@ -46,7 +50,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.sync),
               title: Text('Mark as In Progress'),
               onTap: () async {
-                await firestore.collection('tasks').doc(task.id).update({'status': 'In Progress'});
+                await controller.updateTaskStatus(task.id, 'In Progress');
                 Get.back();
               },
             ),
@@ -54,7 +58,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.delete, color: Colors.red),
               title: Text('Delete Task'),
               onTap: () async {
-                await firestore.collection('tasks').doc(task.id).delete();
+                await controller.deleteTask(task.id);
                 Get.back();
               },
             ),
@@ -64,10 +68,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  List<Task> getSortedTasks(List<Task> tasks) {
+    final priorityOrder = {'High': 0, 'Medium': 1, 'Low': 2};
+
+    tasks.sort((a, b) {
+      return priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
+    });
+
+    return tasks;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scrHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -96,48 +108,69 @@ class _HomePageState extends State<HomePage> {
           addTaskBar(),
           timeline(),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: firestore.collection('tasks').snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                final docs = snapshot.data!.docs;
-                if (docs.isEmpty) {
-                  return emptylist();
-                }
-                final tasks = docs.map((doc) {
-                  final task = Task.fromDocument(doc);
-                  task.id = doc.id;
-                  return task;
-                }).toList();
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-                return ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return GestureDetector(
-                      onTap: () => bottomsheet(task),
-                      child: Card(
-                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: Colors.grey[100],
-                        child: ListTile(
-                          title: Text(task.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(task.note),
-                          trailing: Text(
-                            task.status,
-                            style: TextStyle(color: statuscolor(task.status)),
-                          ),
+              if (controller.taskList.isEmpty) {
+                return emptyList();
+              }
+
+              final sortedTasks = getSortedTasks(controller.taskList.toList());
+
+              return ListView.builder(
+                itemCount: sortedTasks.length,
+                itemBuilder: (context, index) {
+                  final task = sortedTasks[index];
+                  return GestureDetector(
+                    onTap: () => bottomSheet(task),
+                    child: Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      color: Colors.grey[100],
+                      child: ListTile(
+                        title: Text(task.title, style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(task.note),
+                        trailing: Text(
+                          task.status,
+                          style: TextStyle(color: statusColor(task.status)),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget addTaskBar() {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(DateFormat.yMMMMd().format(DateTime.now()),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey)),
+              Text("Today", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+            ],
+          ),
+          Button(
+            label: "+ Add Task",
+            onTap: () async {
+              final Task? newTask = await Get.to(() => AddTaskPage());
+              if (newTask != null) controller.fetchTasks();
+            },
           ),
         ],
       ),
@@ -170,34 +203,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget addTaskBar() {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(DateFormat.yMMMMd().format(DateTime.now()),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey)),
-              Text("Today", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
-            ],
-          ),
-          Button(
-            label: "+ Add Task",
-            onTap: () async {
-              final Task? newTask = await Get.to(() => AddTaskPage());
-              // Firestore stream auto updates UI; no manual update needed here
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget emptylist() {
+  Widget emptyList() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -217,15 +223,15 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-Color statuscolor(String status) {
-  switch (status) {
-    case "Completed":
-      return Colors.green;
-    case "In Progress":
-      return Colors.orange;
-    default:
-      return Colors.red;
+  Color statusColor(String status) {
+    switch (status) {
+      case "Completed":
+        return Colors.green;
+      case "In Progress":
+        return Colors.orange;
+      default:
+        return Colors.red;
+    }
   }
 }

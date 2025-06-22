@@ -8,7 +8,6 @@ class Task {
   String startTime;
   String endTime;
   int remind;
-  String repeat;
   String priority;
   String status;
 
@@ -20,7 +19,6 @@ class Task {
     required this.startTime,
     required this.endTime,
     required this.remind,
-    required this.repeat,
     required this.priority,
     required this.status,
   });
@@ -33,7 +31,6 @@ class Task {
       'startTime': startTime,
       'endTime': endTime,
       'remind': remind,
-      'repeat': repeat,
       'priority': priority,
       'status': status,
     };
@@ -49,7 +46,6 @@ class Task {
       startTime: map['startTime'],
       endTime: map['endTime'],
       remind: map['remind'],
-      repeat: map['repeat'],
       priority: map['priority'],
       status: map['status'],
     );
